@@ -2,27 +2,107 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
+directive @auth on FIELD_DEFINITION
+
+scalar DateTime
+schema {
+  query: Query
+  mutation: Mutation
 }
+
+#Models
 
 type User {
   id: ID!
-  name: String!
+  username: String!
 }
+
+type Post {
+  id: ID!
+  title: String!
+  text: String!
+  owner: User!
+  commentsAllowed: Boolean!
+
+  comments(first: Int, after: ID): CommentConnection!
+}
+
+type Comment {
+  id: ID!
+  owner: User!
+  text: String!
+  createdAt: DateTime!
+
+  replies(first: Int, after: ID): CommentConnection!
+}
+
+#Pagination
+
+type PostConnection {
+  edges: [PostEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PostEdge {
+  cursor: ID!
+  node: Post!
+}
+
+type CommentConnection {
+  edges: [CommentEdge!]!
+  pageInfo: PageInfo!
+}
+
+type CommentEdge {
+  cursor: ID!
+  node: Comment!
+}
+
+type PageInfo {
+  startCursor: ID
+  endCursor: ID
+  hasNextPage: Boolean!
+}
+
+#Requests
 
 type Query {
-  todos: [Todo!]!
-}
+  posts(first: Int, after: ID): PostConnection!
 
-input NewTodo {
-  text: String!
-  userId: String!
+  post(id: ID!): Post
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+#  Auth
+  register(username: String!, password: String!): AuthResponse!
+
+#  Posts
+  addPost(title: String! text: String! commentsAllowed: Boolean): AddPostResponse! @auth
+  setCommentsAllowed(postID: ID!, allowed: Boolean!): Post! @auth
+
+#  Comments
+  addComment(postID: ID! text: String!): AddCommentResponse! @auth
+  addReplay(parentCommentID: ID!, text: String!): AddReplayResponse! @auth
+}
+
+#Responses
+
+type AuthResponse {
+  token: String!
+  error: String!
+}
+
+type AddPostResponse{
+  post: Post!
+  error: String!
+}
+
+type AddCommentResponse{
+  comment: Comment!
+  error: String!
+}
+
+type AddReplayResponse{
+  comment: Comment!
+  error: String!
 }
