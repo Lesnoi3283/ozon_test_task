@@ -67,17 +67,21 @@ type PageInfo {
 #Requests
 
 type Query {
+#  Posts
   posts(first: Int, after: ID): PostConnection!
-
   post(id: ID!): Post
+
+#  Comments
+  commentReplies(commentID: ID!, first: Int, after: ID): CommentConnection!
 }
 
+#todo add @auth package url
 type Mutation {
 #  Auth
   register(username: String!, password: String!): AuthResponse!
 
 #  Posts
-  addPost(title: String! text: String! commentsAllowed: Boolean): AddPostResponse! @auth
+  addPost(title: String! text: String! commentsAllowed: Boolean = true): AddPostResponse! @auth
   setCommentsAllowed(postID: ID!, allowed: Boolean!): Post! @auth
 
 #  Comments
