@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Post struct {
 	ID              int
 	OwnerID         int
@@ -9,10 +11,12 @@ type Post struct {
 }
 
 type Comment struct {
-	ID       int
-	PostID   int
-	ParentID int //zero if comment doesnt have parent.
-	Text     string
+	ID        int
+	OwnerID   int
+	PostID    int
+	ParentID  int //zero if comment doesnt have parent.
+	Text      string
+	CreatedAt time.Time
 }
 
 type User struct {
