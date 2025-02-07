@@ -27,7 +27,7 @@ type Comment struct {
 	Owner     *User              `json:"owner"`
 	Text      string             `json:"text"`
 	CreatedAt string             `json:"createdAt"`
-	Replies   *CommentConnection `json:"replies"`
+	Replies   *CommentConnection `json:"replies,omitempty"`
 }
 
 type CommentConnection struct {

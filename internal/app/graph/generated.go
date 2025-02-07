@@ -72,7 +72,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Owner     func(childComplexity int) int
-		Replies   func(childComplexity int, first *int32, after *string) int
+		Replies   func(childComplexity int, limit *int32, after *string) int
 		Text      func(childComplexity int) int
 	}
 
@@ -120,7 +120,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		CommentReplies func(childComplexity int, commentID string, first *int32, after *string) int
+		CommentReplies func(childComplexity int, commentID string, limit *int32, after *string) int
 		Post           func(childComplexity int, id string) int
 		Posts          func(childComplexity int, first *int32, after *string) int
 	}
@@ -141,7 +141,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Posts(ctx context.Context, first *int32, after *string) (*model.PostConnection, error)
 	Post(ctx context.Context, id string) (*model.Post, error)
-	CommentReplies(ctx context.Context, commentID string, first *int32, after *string) (*model.CommentConnection, error)
+	CommentReplies(ctx context.Context, commentID string, limit *int32, after *string) (*model.CommentConnection, error)
 }
 
 type executableSchema struct {
@@ -250,7 +250,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Comment.Replies(childComplexity, args["first"].(*int32), args["after"].(*string)), true
+		return e.complexity.Comment.Replies(childComplexity, args["limit"].(*int32), args["after"].(*string)), true
 
 	case "Comment.text":
 		if e.complexity.Comment.Text == nil {
@@ -453,7 +453,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.CommentReplies(childComplexity, args["commentID"].(string), args["first"].(*int32), args["after"].(*string)), true
+		return e.complexity.Query.CommentReplies(childComplexity, args["commentID"].(string), args["limit"].(*int32), args["after"].(*string)), true
 
 	case "Query.post":
 		if e.complexity.Query.Post == nil {
@@ -619,11 +619,11 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Comment_replies_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Comment_replies_argsFirst(ctx, rawArgs)
+	arg0, err := ec.field_Comment_replies_argsLimit(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["first"] = arg0
+	args["limit"] = arg0
 	arg1, err := ec.field_Comment_replies_argsAfter(ctx, rawArgs)
 	if err != nil {
 		return nil, err
@@ -631,12 +631,12 @@ func (ec *executionContext) field_Comment_replies_args(ctx context.Context, rawA
 	args["after"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Comment_replies_argsFirst(
+func (ec *executionContext) field_Comment_replies_argsLimit(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-	if tmp, ok := rawArgs["first"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
 		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
 	}
 
@@ -952,11 +952,11 @@ func (ec *executionContext) field_Query_commentReplies_args(ctx context.Context,
 		return nil, err
 	}
 	args["commentID"] = arg0
-	arg1, err := ec.field_Query_commentReplies_argsFirst(ctx, rawArgs)
+	arg1, err := ec.field_Query_commentReplies_argsLimit(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["first"] = arg1
+	args["limit"] = arg1
 	arg2, err := ec.field_Query_commentReplies_argsAfter(ctx, rawArgs)
 	if err != nil {
 		return nil, err
@@ -977,12 +977,12 @@ func (ec *executionContext) field_Query_commentReplies_argsCommentID(
 	return zeroVal, nil
 }
 
-func (ec *executionContext) field_Query_commentReplies_argsFirst(
+func (ec *executionContext) field_Query_commentReplies_argsLimit(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-	if tmp, ok := rawArgs["first"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
 		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
 	}
 
@@ -1760,14 +1760,11 @@ func (ec *executionContext) _Comment_replies(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*model.CommentConnection)
 	fc.Result = res
-	return ec.marshalNCommentConnection2ᚖozon_test_taskᚋinternalᚋappᚋgraphᚋmodelᚐCommentConnection(ctx, field.Selections, res)
+	return ec.marshalOCommentConnection2ᚖozon_test_taskᚋinternalᚋappᚋgraphᚋmodelᚐCommentConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Comment_replies(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3161,7 +3158,7 @@ func (ec *executionContext) _Query_commentReplies(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().CommentReplies(rctx, fc.Args["commentID"].(string), fc.Args["first"].(*int32), fc.Args["after"].(*string))
+		return ec.resolvers.Query().CommentReplies(rctx, fc.Args["commentID"].(string), fc.Args["limit"].(*int32), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5595,9 +5592,6 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "replies":
 			out.Values[i] = ec._Comment_replies(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7046,6 +7040,13 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOCommentConnection2ᚖozon_test_taskᚋinternalᚋappᚋgraphᚋmodelᚐCommentConnection(ctx context.Context, sel ast.SelectionSet, v *model.CommentConnection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CommentConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {

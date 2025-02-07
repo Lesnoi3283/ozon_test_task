@@ -33,7 +33,7 @@ type Comment {
   text: String!
   createdAt: DateTime!
 
-  replies(first: Int, after: ID): CommentConnection!
+  replies(limit: Int, after: ID): CommentConnection
 }
 
 #Pagination
@@ -72,7 +72,7 @@ type Query {
   post(id: ID!): Post
 
 #  Comments
-  commentReplies(commentID: ID!, first: Int, after: ID): CommentConnection!
+  commentReplies(commentID: ID!, limit: Int, after: ID): CommentConnection!
 }
 
 #todo add @auth package url

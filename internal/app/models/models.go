@@ -4,7 +4,7 @@ import "time"
 
 type Post struct {
 	ID              int
-	OwnerID         int
+	Owner           User
 	Title           string
 	Text            string
 	CommentsAllowed bool
@@ -12,7 +12,7 @@ type Post struct {
 
 type Comment struct {
 	ID        int
-	OwnerID   int
+	Owner     User
 	PostID    int
 	ParentID  int //zero if comment doesnt have parent.
 	Text      string

@@ -27,6 +27,6 @@ type CommentRepo interface {
 }
 
 type UserRepo interface {
-	AddUser(ctx context.Context, user *models.User) error
+	AddUser(ctx context.Context, user *models.User) (int, error)
 	GetUserByID(ctx context.Context, userID int) (*models.User, error)
 }

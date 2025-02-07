@@ -9,16 +9,39 @@ import (
 
 type PostResolver struct{ *Resolver }
 
-func (p *PostResolver) Comments(ctx context.Context, obj *model.Post) (*model.CommentConnection, error) {
+func (p *PostResolver) Comments(ctx context.Context, obj *model.Post, limit *int, after *string) (*model.CommentConnection, error) {
+	//data prepare
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		return nil, fmt.Errorf("postID is not an int")
 	}
-	comments, hasNextPage, err := p.CommentRepo.GetCommentsByPostID(ctx, id, p.Cfg.DefaultCommentsLimit, 0)
+	if limit == nil {
+		limit = new(int)
+	}
+	var afterInt int
+	if after == nil {
+		afterInt = 0
+	} else {
+		afterInt, err = strconv.Atoi(*after)
+		if err != nil {
+			return nil, fmt.Errorf("after is not convertable to int")
+		}
+	}
+
+	//get data
+	comments, hasNextPage, err := p.CommentRepo.GetCommentsByPostID(ctx, id, *limit, afterInt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comments by post id: %w", err)
 	}
 
+	var startCursor string
+	var endCursor string
+	if len(comments) > 0 {
+		startCursor = strconv.Itoa(comments[0].ID)
+		endCursor = strconv.Itoa(comments[len(comments)-1].ID)
+	}
+
+	//prepare answer
 	edges := make([]*model.CommentEdge, len(comments))
 	for i, comment := range comments {
 		edges[i] = &model.CommentEdge{
@@ -31,13 +54,7 @@ func (p *PostResolver) Comments(ctx context.Context, obj *model.Post) (*model.Co
 		}
 	}
 
-	var startCursor string
-	var endCursor string
-	if len(comments) > 0 {
-		startCursor = strconv.Itoa(comments[0].ID)
-		endCursor = strconv.Itoa(comments[len(comments)-1].ID)
-	}
-
+	// return the answer
 	return &model.CommentConnection{
 		Edges: edges,
 		PageInfo: &model.PageInfo{
@@ -47,5 +64,3 @@ func (p *PostResolver) Comments(ctx context.Context, obj *model.Post) (*model.Co
 		},
 	}, nil
 }
-
-//todo написать отдельный резолвер для реплаев, возвращать только 1 уровень реплаев (без сабреплаев).
