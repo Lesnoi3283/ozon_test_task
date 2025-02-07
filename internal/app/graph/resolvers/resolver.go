@@ -1,7 +1,7 @@
 package resolvers
 
 import (
-	"ozon_test_task/config"
+	"ozon_test_task/cfg"
 	"ozon_test_task/internal/app/graph/repository"
 )
 
@@ -13,5 +13,5 @@ type Resolver struct {
 	UserRepo    repository.UserRepo
 	PostRepo    repository.PostRepo
 	CommentRepo repository.CommentRepo
-	Cfg         config.Config
+	Cfg         cfg.Cfg
 }

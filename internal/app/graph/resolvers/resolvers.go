@@ -2,11 +2,10 @@ package resolvers
 
 import (
 	"ozon_test_task/internal/app/graph"
-	"ozon_test_task/internal/app/graph/repository"
 )
 
 // Mutation returns graph.MutationResolver implementation.
-func (r *Resolver) Mutation(postRepo repository.PostRepo, userRepo repository.UserRepo) graph.MutationResolver {
+func (r *Resolver) Mutation() graph.MutationResolver {
 	return &mutationResolver{r}
 }
 

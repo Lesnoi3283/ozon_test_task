@@ -20,7 +20,7 @@ func (r *mutationResolver) AddPost(ctx context.Context, title string, text strin
 	}
 
 	newPost := &models.Post{
-		OwnerID:         user.ID,
+		Owner:           *user,
 		Title:           title,
 		Text:            text,
 		CommentsAllowed: *commentsAllowed,
