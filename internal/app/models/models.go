@@ -23,4 +23,5 @@ type User struct {
 	ID           int
 	Login        string
 	PasswordHash string
+	PasswordSalt string
 }

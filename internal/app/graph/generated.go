@@ -44,7 +44,6 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	Auth func(ctx context.Context, obj any, next graphql.Resolver) (res any, err error)
 }
 
 type ComplexityRoot struct {
@@ -90,6 +89,7 @@ type ComplexityRoot struct {
 		AddComment         func(childComplexity int, postID string, text string) int
 		AddPost            func(childComplexity int, title string, text string, commentsAllowed *bool) int
 		AddReplay          func(childComplexity int, parentCommentID string, text string) int
+		Auth               func(childComplexity int, username string, password string) int
 		Register           func(childComplexity int, username string, password string) int
 		SetCommentsAllowed func(childComplexity int, postID string, allowed bool) int
 	}
@@ -101,7 +101,7 @@ type ComplexityRoot struct {
 	}
 
 	Post struct {
-		Comments        func(childComplexity int, first *int32, after *string) int
+		Comments        func(childComplexity int, limit *int32, after *string) int
 		CommentsAllowed func(childComplexity int) int
 		ID              func(childComplexity int) int
 		Owner           func(childComplexity int) int
@@ -122,7 +122,7 @@ type ComplexityRoot struct {
 	Query struct {
 		CommentReplies func(childComplexity int, commentID string, limit *int32, after *string) int
 		Post           func(childComplexity int, id string) int
-		Posts          func(childComplexity int, first *int32, after *string) int
+		Posts          func(childComplexity int, limit *int32, after *string) int
 	}
 
 	User struct {
@@ -133,13 +133,14 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	Register(ctx context.Context, username string, password string) (*model.AuthResponse, error)
+	Auth(ctx context.Context, username string, password string) (*model.AuthResponse, error)
 	AddPost(ctx context.Context, title string, text string, commentsAllowed *bool) (*model.AddPostResponse, error)
 	SetCommentsAllowed(ctx context.Context, postID string, allowed bool) (*model.Post, error)
 	AddComment(ctx context.Context, postID string, text string) (*model.AddCommentResponse, error)
 	AddReplay(ctx context.Context, parentCommentID string, text string) (*model.AddReplayResponse, error)
 }
 type QueryResolver interface {
-	Posts(ctx context.Context, first *int32, after *string) (*model.PostConnection, error)
+	Posts(ctx context.Context, limit *int32, after *string) (*model.PostConnection, error)
 	Post(ctx context.Context, id string) (*model.Post, error)
 	CommentReplies(ctx context.Context, commentID string, limit *int32, after *string) (*model.CommentConnection, error)
 }
@@ -323,6 +324,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddReplay(childComplexity, args["parentCommentID"].(string), args["text"].(string)), true
 
+	case "Mutation.auth":
+		if e.complexity.Mutation.Auth == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_auth_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Auth(childComplexity, args["username"].(string), args["password"].(string)), true
+
 	case "Mutation.register":
 		if e.complexity.Mutation.Register == nil {
 			break
@@ -378,7 +391,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Post.Comments(childComplexity, args["first"].(*int32), args["after"].(*string)), true
+		return e.complexity.Post.Comments(childComplexity, args["limit"].(*int32), args["after"].(*string)), true
 
 	case "Post.commentsAllowed":
 		if e.complexity.Post.CommentsAllowed == nil {
@@ -477,7 +490,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Posts(childComplexity, args["first"].(*int32), args["after"].(*string)), true
+		return e.complexity.Query.Posts(childComplexity, args["limit"].(*int32), args["after"].(*string)), true
 
 	case "User.id":
 		if e.complexity.User.ID == nil {
@@ -798,6 +811,47 @@ func (ec *executionContext) field_Mutation_addReplay_argsText(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Mutation_auth_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Mutation_auth_argsUsername(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["username"] = arg0
+	arg1, err := ec.field_Mutation_auth_argsPassword(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["password"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Mutation_auth_argsUsername(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+	if tmp, ok := rawArgs["username"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Mutation_auth_argsPassword(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+	if tmp, ok := rawArgs["password"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Mutation_register_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -883,11 +937,11 @@ func (ec *executionContext) field_Mutation_setCommentsAllowed_argsAllowed(
 func (ec *executionContext) field_Post_comments_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Post_comments_argsFirst(ctx, rawArgs)
+	arg0, err := ec.field_Post_comments_argsLimit(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["first"] = arg0
+	args["limit"] = arg0
 	arg1, err := ec.field_Post_comments_argsAfter(ctx, rawArgs)
 	if err != nil {
 		return nil, err
@@ -895,12 +949,12 @@ func (ec *executionContext) field_Post_comments_args(ctx context.Context, rawArg
 	args["after"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Post_comments_argsFirst(
+func (ec *executionContext) field_Post_comments_argsLimit(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-	if tmp, ok := rawArgs["first"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
 		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
 	}
 
@@ -1029,11 +1083,11 @@ func (ec *executionContext) field_Query_post_argsID(
 func (ec *executionContext) field_Query_posts_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := ec.field_Query_posts_argsFirst(ctx, rawArgs)
+	arg0, err := ec.field_Query_posts_argsLimit(ctx, rawArgs)
 	if err != nil {
 		return nil, err
 	}
-	args["first"] = arg0
+	args["limit"] = arg0
 	arg1, err := ec.field_Query_posts_argsAfter(ctx, rawArgs)
 	if err != nil {
 		return nil, err
@@ -1041,12 +1095,12 @@ func (ec *executionContext) field_Query_posts_args(ctx context.Context, rawArgs 
 	args["after"] = arg1
 	return args, nil
 }
-func (ec *executionContext) field_Query_posts_argsFirst(
+func (ec *executionContext) field_Query_posts_argsLimit(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*int32, error) {
-	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
-	if tmp, ok := rawArgs["first"]; ok {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+	if tmp, ok := rawArgs["limit"]; ok {
 		return ec.unmarshalOInt2ᚖint32(ctx, tmp)
 	}
 
@@ -2060,6 +2114,67 @@ func (ec *executionContext) fieldContext_Mutation_register(ctx context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_auth(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_auth(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Auth(rctx, fc.Args["username"].(string), fc.Args["password"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.AuthResponse)
+	fc.Result = res
+	return ec.marshalNAuthResponse2ᚖozon_test_taskᚋinternalᚋappᚋgraphᚋmodelᚐAuthResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_auth(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "token":
+				return ec.fieldContext_AuthResponse_token(ctx, field)
+			case "error":
+				return ec.fieldContext_AuthResponse_error(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type AuthResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_auth_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_addPost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_addPost(ctx, field)
 	if err != nil {
@@ -2073,30 +2188,8 @@ func (ec *executionContext) _Mutation_addPost(ctx context.Context, field graphql
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddPost(rctx, fc.Args["title"].(string), fc.Args["text"].(string), fc.Args["commentsAllowed"].(*bool))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			if ec.directives.Auth == nil {
-				var zeroVal *model.AddPostResponse
-				return zeroVal, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.AddPostResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *ozon_test_task/internal/app/graph/model.AddPostResponse`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddPost(rctx, fc.Args["title"].(string), fc.Args["text"].(string), fc.Args["commentsAllowed"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2156,30 +2249,8 @@ func (ec *executionContext) _Mutation_setCommentsAllowed(ctx context.Context, fi
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().SetCommentsAllowed(rctx, fc.Args["postID"].(string), fc.Args["allowed"].(bool))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			if ec.directives.Auth == nil {
-				var zeroVal *model.Post
-				return zeroVal, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Post); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *ozon_test_task/internal/app/graph/model.Post`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().SetCommentsAllowed(rctx, fc.Args["postID"].(string), fc.Args["allowed"].(bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2247,30 +2318,8 @@ func (ec *executionContext) _Mutation_addComment(ctx context.Context, field grap
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddComment(rctx, fc.Args["postID"].(string), fc.Args["text"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			if ec.directives.Auth == nil {
-				var zeroVal *model.AddCommentResponse
-				return zeroVal, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.AddCommentResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *ozon_test_task/internal/app/graph/model.AddCommentResponse`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddComment(rctx, fc.Args["postID"].(string), fc.Args["text"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2330,30 +2379,8 @@ func (ec *executionContext) _Mutation_addReplay(ctx context.Context, field graph
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		directive0 := func(rctx context.Context) (any, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddReplay(rctx, fc.Args["parentCommentID"].(string), fc.Args["text"].(string))
-		}
-
-		directive1 := func(ctx context.Context) (any, error) {
-			if ec.directives.Auth == nil {
-				var zeroVal *model.AddReplayResponse
-				return zeroVal, errors.New("directive auth is not implemented")
-			}
-			return ec.directives.Auth(ctx, nil, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.AddReplayResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *ozon_test_task/internal/app/graph/model.AddReplayResponse`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddReplay(rctx, fc.Args["parentCommentID"].(string), fc.Args["text"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3031,7 +3058,7 @@ func (ec *executionContext) _Query_posts(ctx context.Context, field graphql.Coll
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Posts(rctx, fc.Args["first"].(*int32), fc.Args["after"].(*string))
+		return ec.resolvers.Query().Posts(rctx, fc.Args["limit"].(*int32), fc.Args["after"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5725,6 +5752,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "register":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_register(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "auth":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_auth(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

@@ -3,6 +3,7 @@ package resolvers
 import (
 	"ozon_test_task/cfg"
 	"ozon_test_task/internal/app/graph/repository"
+	"ozon_test_task/internal/app/middlewares"
 )
 
 // This file will not be regenerated automatically.
@@ -14,4 +15,5 @@ type Resolver struct {
 	PostRepo    repository.PostRepo
 	CommentRepo repository.CommentRepo
 	Cfg         cfg.Cfg
+	JWTManager  middlewares.JWTManager
 }

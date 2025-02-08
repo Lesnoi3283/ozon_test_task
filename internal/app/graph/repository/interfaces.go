@@ -28,5 +28,10 @@ type CommentRepo interface {
 
 type UserRepo interface {
 	AddUser(ctx context.Context, user *models.User) (int, error)
+	// GetUserByID returns a user by its ID without password hash and salt.
+	// returns repository.NewErrNotFound if not found.
 	GetUserByID(ctx context.Context, userID int) (*models.User, error)
+	// GetUserByIDWithCred returns a user by its login with credentials (password_hash and password_salt).
+	// returns repository.NewErrNotFound if not found.
+	GetUserByLoginWithCred(ctx context.Context, login string) (*models.User, error)
 }
