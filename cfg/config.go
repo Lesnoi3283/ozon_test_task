@@ -1,4 +1,4 @@
-package config
+package cfg
 
 import (
 	"flag"
@@ -7,21 +7,36 @@ import (
 	"strconv"
 )
 
-type Config struct {
+type Cfg struct {
+	LogLevel             string
 	ServerAddress        string
 	ServerPort           string
 	DefaultCommentsLimit int
 	MaxCommentsLimit     int
 	DefaultPostsLimit    int
 	MaxPostsLimit        int
+	DBConnectionString   string
 	InMemoryStorage      bool
+	RedisAddress         string
+	RedisPort            string
+	RedisPassword        string
+	MaxCommentTextLength int
+	DebugMode            bool
 }
 
-// Configure reads values from env and command line args into a Config structure.
-func (c *Config) Configure() (*Config, error) {
-	cfg := &Config{}
+// Configure reads values from env and command line args into a Cfg structure.
+func Configure() (*Cfg, error) {
+	cfg := &Cfg{}
 
-	flag.BoolVar(&c.InMemoryStorage, "m", false, "switch to in-memory storage (Redis)")
+	flag.BoolVar(&cfg.InMemoryStorage, "m", false, "switch to in-memory storage (Redis)")
+	flag.BoolVar(&cfg.DebugMode, "d", false, "enable debug mode")
+	flag.Parse()
+
+	if logLevel := os.Getenv("LOG_LEVEL"); logLevel != "" {
+		cfg.LogLevel = logLevel
+	} else {
+		cfg.LogLevel = "debug"
+	}
 
 	if addr := os.Getenv("SERVER_ADDRESS"); addr != "" {
 		cfg.ServerAddress = addr
@@ -73,6 +88,34 @@ func (c *Config) Configure() (*Config, error) {
 		cfg.MaxPostsLimit = limit
 	} else {
 		cfg.MaxPostsLimit = 100
+	}
+
+	if redisAddr := os.Getenv("REDIS_ADDRESS"); redisAddr != "" {
+		cfg.RedisAddress = redisAddr
+	} else {
+		cfg.RedisAddress = "localhost"
+	}
+
+	if redisPort := os.Getenv("REDIS_PORT"); redisPort != "" {
+		cfg.RedisPort = redisPort
+	} else {
+		cfg.RedisPort = "6379"
+	}
+
+	if redisPass := os.Getenv("REDIS_PASSWORD"); redisPass != "" {
+		cfg.RedisPassword = redisPass
+	} else {
+		cfg.RedisPassword = ""
+	}
+
+	if val := os.Getenv("MAX_COMMENT_TEXT_LENGTH"); val != "" {
+		maxLength, err := strconv.Atoi(val)
+		if err != nil {
+			return nil, fmt.Errorf("invalid MAX_COMMENT_TEXT_LENGTH: %w", err)
+		}
+		cfg.MaxCommentTextLength = maxLength
+	} else {
+		cfg.MaxCommentTextLength = 2000
 	}
 
 	return cfg, nil

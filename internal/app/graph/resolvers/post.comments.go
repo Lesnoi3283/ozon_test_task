@@ -7,16 +7,19 @@ import (
 	"strconv"
 )
 
-type PostResolver struct{ *Resolver }
+//type postResolver struct{ *Resolver }
 
-func (p *PostResolver) Comments(ctx context.Context, obj *model.Post, limit *int, after *string) (*model.CommentConnection, error) {
+func (p *postResolver) Comments(ctx context.Context, obj *model.Post, limit *int32, after *string) (*model.CommentConnection, error) {
 	//data prepare
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		return nil, fmt.Errorf("postID is not an int")
 	}
+	limitInt := 0
 	if limit == nil {
-		limit = new(int)
+		limitInt = p.Cfg.DefaultCommentsLimit
+	} else {
+		limitInt = int(*limit)
 	}
 	var afterInt int
 	if after == nil {
@@ -29,7 +32,7 @@ func (p *PostResolver) Comments(ctx context.Context, obj *model.Post, limit *int
 	}
 
 	//get data
-	comments, hasNextPage, err := p.CommentRepo.GetCommentsByPostID(ctx, id, *limit, afterInt)
+	comments, hasNextPage, err := p.CommentRepo.GetCommentsByPostID(ctx, id, limitInt, afterInt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get comments by post id: %w", err)
 	}
@@ -50,6 +53,10 @@ func (p *PostResolver) Comments(ctx context.Context, obj *model.Post, limit *int
 				ID:        strconv.Itoa(comment.ID),
 				Text:      comment.Text,
 				CreatedAt: comment.CreatedAt.String(),
+				Owner: &model.User{
+					ID:       strconv.Itoa(comment.Owner.ID),
+					Username: comment.Owner.Login,
+				},
 			},
 		}
 	}

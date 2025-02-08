@@ -7,18 +7,17 @@ import (
 	"strconv"
 )
 
-type CommentsResolver struct {
-	*Resolver
-}
-
-func (r *CommentsResolver) Replies(ctx context.Context, obj *model.Comment, limit *int, after *string) (*model.CommentConnection, error) {
+func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, limit *int32, after *string) (*model.CommentConnection, error) {
 	//data prepare
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
 		return nil, fmt.Errorf("commentID is not an int")
 	}
+	limitInt := 0
 	if limit == nil {
-		limit = new(int)
+		limitInt = r.Cfg.DefaultCommentsLimit
+	} else {
+		limitInt = int(*limit)
 	}
 	var afterInt int
 	if after == nil {
@@ -31,7 +30,7 @@ func (r *CommentsResolver) Replies(ctx context.Context, obj *model.Comment, limi
 	}
 
 	//get data
-	replays, hasNextPage, err := r.CommentRepo.GetReplaysByCommentID(ctx, id, *limit, afterInt)
+	replays, hasNextPage, err := r.CommentRepo.GetReplaysByCommentID(ctx, id, limitInt, afterInt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get replays")
 	}
@@ -60,7 +59,7 @@ func (r *CommentsResolver) Replies(ctx context.Context, obj *model.Comment, limi
 			},
 		}
 	}
-	
+
 	return &model.CommentConnection{
 		Edges: edges,
 		PageInfo: &model.PageInfo{

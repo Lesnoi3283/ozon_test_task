@@ -13,7 +13,7 @@ type Post struct {
 type Comment struct {
 	ID        int
 	Owner     User
-	PostID    int
+	PostID    int //zero if comment is a sub-comment
 	ParentID  int //zero if comment doesnt have parent.
 	Text      string
 	CreatedAt time.Time

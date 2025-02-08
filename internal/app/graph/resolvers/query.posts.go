@@ -12,8 +12,11 @@ import (
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, limit *int32, after *string) (*model.PostConnection, error) {
 	//prepare input data
+	limitInt := 0
 	if limit == nil {
-		limit = new(int32)
+		limitInt = r.Cfg.DefaultPostsLimit
+	} else {
+		limitInt = int(*limit)
 	}
 	if after == nil {
 		after = new(string)
@@ -24,7 +27,7 @@ func (r *queryResolver) Posts(ctx context.Context, limit *int32, after *string) 
 	}
 
 	//get posts
-	posts, hasNextPage, err := r.PostRepo.GetPosts(ctx, int(*limit), afterInt)
+	posts, hasNextPage, err := r.PostRepo.GetPosts(ctx, limitInt, afterInt)
 	if err != nil {
 		return nil, fmt.Errorf("cant get posts")
 	}

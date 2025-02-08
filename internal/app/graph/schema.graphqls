@@ -73,7 +73,6 @@ type Query {
   commentReplies(commentID: ID!, limit: Int, after: ID): CommentConnection!
 }
 
-#todo add @auth package url
 type Mutation {
 #  Auth
   register(username: String!, password: String!): AuthResponse!

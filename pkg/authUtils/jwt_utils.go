@@ -2,6 +2,7 @@ package authUtils
 
 import (
 	"github.com/golang-jwt/jwt/v4"
+	"ozon_test_task/internal/app/middlewares"
 	"time"
 )
 
@@ -44,7 +45,7 @@ func (j *JWTHelper) GetUserID(token string) (int, error) {
 		return -1, err
 	}
 	if !tokenGot.Valid {
-		return -1, NewErrJWTIsNotValid()
+		return -1, middlewares.NewErrJWTIsNotValid()
 	}
 
 	return claims.UserID, nil
