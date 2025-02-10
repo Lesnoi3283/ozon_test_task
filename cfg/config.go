@@ -90,16 +90,22 @@ func Configure() (*Cfg, error) {
 		cfg.MaxPostsLimit = 100
 	}
 
+	if dbConnStr := os.Getenv("DB_CONN_STRING"); dbConnStr != "" {
+		cfg.DBConnectionString = dbConnStr
+	} else {
+		cfg.DBConnectionString = ""
+	}
+
 	if redisAddr := os.Getenv("REDIS_ADDRESS"); redisAddr != "" {
 		cfg.RedisAddress = redisAddr
 	} else {
-		cfg.RedisAddress = "localhost"
+		cfg.RedisAddress = ""
 	}
 
 	if redisPort := os.Getenv("REDIS_PORT"); redisPort != "" {
 		cfg.RedisPort = redisPort
 	} else {
-		cfg.RedisPort = "6379"
+		cfg.RedisPort = ""
 	}
 
 	if redisPass := os.Getenv("REDIS_PASSWORD"); redisPass != "" {
