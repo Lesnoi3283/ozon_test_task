@@ -2,25 +2,76 @@
 
 package model
 
+type AddCommentResponse struct {
+	Comment *Comment `json:"comment"`
+	Error   string   `json:"error"`
+}
+
+type AddPostResponse struct {
+	Post  *Post  `json:"post"`
+	Error string `json:"error"`
+}
+
+type AddReplayResponse struct {
+	Comment *Comment `json:"comment"`
+	Error   string   `json:"error"`
+}
+
+type AuthResponse struct {
+	Token string `json:"token"`
+	Error string `json:"error"`
+}
+
+type Comment struct {
+	ID        string             `json:"id"`
+	Owner     *User              `json:"owner"`
+	Text      string             `json:"text"`
+	CreatedAt string             `json:"createdAt"`
+	Replies   *CommentConnection `json:"replies,omitempty"`
+}
+
+type CommentConnection struct {
+	Edges    []*CommentEdge `json:"edges"`
+	PageInfo *PageInfo      `json:"pageInfo"`
+}
+
+type CommentEdge struct {
+	Cursor string   `json:"cursor"`
+	Node   *Comment `json:"node"`
+}
+
 type Mutation struct {
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type PageInfo struct {
+	StartCursor *string `json:"startCursor,omitempty"`
+	EndCursor   *string `json:"endCursor,omitempty"`
+	HasNextPage bool    `json:"hasNextPage"`
+}
+
+type Post struct {
+	ID              string             `json:"id"`
+	Title           string             `json:"title"`
+	Text            string             `json:"text"`
+	Owner           *User              `json:"owner"`
+	CommentsAllowed bool               `json:"commentsAllowed"`
+	Comments        *CommentConnection `json:"comments"`
+}
+
+type PostConnection struct {
+	Edges    []*PostEdge `json:"edges"`
+	PageInfo *PageInfo   `json:"pageInfo"`
+}
+
+type PostEdge struct {
+	Cursor string `json:"cursor"`
+	Node   *Post  `json:"node"`
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
-}
-
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	Username string `json:"username"`
 }
