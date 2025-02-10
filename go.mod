@@ -6,9 +6,11 @@ require (
 	github.com/99designs/gqlgen v0.17.64
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.5.1
+	github.com/golang/mock v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/vektah/gqlparser/v2 v2.5.22
+	go.uber.org/mock v0.5.0
 	go.uber.org/zap v1.27.0
 )
 

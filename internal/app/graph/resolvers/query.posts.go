@@ -7,8 +7,6 @@ import (
 	"strconv"
 )
 
-//todo: rename "first" to "limit"
-
 // Posts is the resolver for the posts field.
 func (r *queryResolver) Posts(ctx context.Context, limit *int32, after *string) (*model.PostConnection, error) {
 	//prepare input data
@@ -18,12 +16,13 @@ func (r *queryResolver) Posts(ctx context.Context, limit *int32, after *string) 
 	} else {
 		limitInt = int(*limit)
 	}
-	if after == nil {
-		after = new(string)
-	}
-	afterInt, err := strconv.Atoi(*after)
-	if err != nil {
-		return nil, fmt.Errorf("after is not a number")
+	afterInt := 0
+	if after != nil {
+		var err error
+		afterInt, err = strconv.Atoi(*after)
+		if err != nil {
+			return nil, fmt.Errorf("after is not a number")
+		}
 	}
 
 	//get posts

@@ -15,6 +15,9 @@ func (r *queryResolver) CommentReplies(ctx context.Context, commentID string, li
 		limitInt = int(*limit)
 	} else {
 		limitInt = r.Cfg.DefaultCommentsLimit
+		if limitInt > r.Cfg.MaxCommentsLimit {
+			limitInt = r.Cfg.MaxCommentsLimit
+		}
 	}
 
 	commentIDInt, err := strconv.Atoi(commentID)

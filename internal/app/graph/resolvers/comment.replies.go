@@ -18,6 +18,9 @@ func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, limit
 		limitInt = r.Cfg.DefaultCommentsLimit
 	} else {
 		limitInt = int(*limit)
+		if limitInt > r.Cfg.MaxCommentsLimit {
+			limitInt = r.Cfg.MaxCommentsLimit
+		}
 	}
 	var afterInt int
 	if after == nil {

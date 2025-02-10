@@ -5,6 +5,8 @@ import (
 	"ozon_test_task/internal/app/models"
 )
 
+//go:generate mockgen -source=interfaces.go -destination=mocks/mock_repositories.go -package=mocks
+
 type PostRepo interface {
 	// AddPost adds a new post to a storage and returns it`s ID.
 	AddPost(ctx context.Context, post *models.Post) (int, error)

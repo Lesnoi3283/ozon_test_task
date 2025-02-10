@@ -6,6 +6,8 @@ import (
 	"ozon_test_task/internal/app/graph/repository"
 )
 
+//go:generate mockgen -source auth.go -destination mocks/mock_mw.go -package mwmocks
+
 type UserContextKeyType string
 
 const UserContextKey UserContextKeyType = "userContextKey"
@@ -45,5 +47,3 @@ func GetAuthMiddleware(manager JWTManager, userRepo repository.UserRepo) func(ne
 		})
 	}
 }
-
-//todo: add login GraphQL handler

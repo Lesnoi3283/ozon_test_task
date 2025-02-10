@@ -115,5 +115,3 @@ func main() {
 	sugar.Infof("connect to %s:%s for GraphQL", conf.ServerAddress, conf.ServerPort)
 	sugar.Fatal(http.ListenAndServe(conf.ServerAddress+":"+conf.ServerPort, nil))
 }
-
-//todo: add logging everywhere

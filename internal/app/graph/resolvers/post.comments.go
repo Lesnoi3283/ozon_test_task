@@ -20,6 +20,9 @@ func (p *postResolver) Comments(ctx context.Context, obj *model.Post, limit *int
 		limitInt = p.Cfg.DefaultCommentsLimit
 	} else {
 		limitInt = int(*limit)
+		if limitInt > p.Cfg.MaxCommentsLimit {
+			limitInt = p.Cfg.MaxCommentsLimit
+		}
 	}
 	var afterInt int
 	if after == nil {
