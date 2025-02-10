@@ -11,6 +11,7 @@ func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, limit
 	//data prepare
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
+		r.Logger.Debugf("commentID is not an int")
 		return nil, fmt.Errorf("commentID is not an int")
 	}
 	limitInt := 0
@@ -28,6 +29,7 @@ func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, limit
 	} else {
 		afterInt, err = strconv.Atoi(*after)
 		if err != nil {
+			r.Logger.Debugf("cant convert after to int, err: %v", err)
 			return nil, fmt.Errorf("after is not convertable to int")
 		}
 	}
@@ -35,6 +37,7 @@ func (r *commentResolver) Replies(ctx context.Context, obj *model.Comment, limit
 	//get data
 	replays, hasNextPage, err := r.CommentRepo.GetReplaysByCommentID(ctx, id, limitInt, afterInt)
 	if err != nil {
+		r.Logger.Debugf("cant get replays from db error: %v", err)
 		return nil, fmt.Errorf("failed to get replays")
 	}
 

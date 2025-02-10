@@ -15,15 +15,18 @@ import (
 func (r *mutationResolver) AddComment(ctx context.Context, postID string, text string) (*model.AddCommentResponse, error) {
 	user, ok := ctx.Value(middlewares.UserContextKey).(*models.User)
 	if !ok {
+		r.Logger.Debugf("Cant get user from context")
 		return nil, gqlerror.Errorf("Not authorized")
 	}
 
 	postIDInt, err := strconv.Atoi(postID)
 	if err != nil {
+		r.Logger.Debugf("Cant convert postID to int, err: %v", err)
 		return nil, fmt.Errorf("postID is not int")
 	}
 
 	if len(text) > r.Cfg.MaxCommentTextLength {
+		r.Logger.Debugf("Max comment length exceeded, current len is \"%v\", max is \"%v\"", len(text), r.Cfg.MaxCommentTextLength)
 		return nil, fmt.Errorf("comment text too long, max lenght: %d", r.Cfg.MaxCommentTextLength)
 	}
 
@@ -37,14 +40,17 @@ func (r *mutationResolver) AddComment(ctx context.Context, postID string, text s
 	//check if comments are allowed
 	post, err := r.PostRepo.GetPostByID(ctx, postIDInt)
 	if err != nil {
+		r.Logger.Debugf("Cant get post from db, err: %v", err)
 		return nil, fmt.Errorf("post not found")
 	}
 	if !post.CommentsAllowed {
+		r.Logger.Debugf("Comments are not allowed to this post")
 		return nil, gqlerror.Errorf("Comment is not allowed to this post")
 	}
 
 	commentID, err := r.CommentRepo.AddComment(ctx, comment)
 	if err != nil {
+		r.Logger.Debugf("Cant add comment to db, err: %v", err)
 		return nil, fmt.Errorf("failed to create a comment")
 	}
 

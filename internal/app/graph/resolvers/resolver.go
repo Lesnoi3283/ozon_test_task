@@ -1,6 +1,7 @@
 package resolvers
 
 import (
+	"go.uber.org/zap"
 	"ozon_test_task/cfg"
 	"ozon_test_task/internal/app/graph/model"
 	"ozon_test_task/internal/app/graph/repository"
@@ -18,4 +19,5 @@ type Resolver struct {
 	Cfg          cfg.Cfg
 	JWTManager   middlewares.JWTManager
 	CommentAdded chan *model.Comment
+	Logger       *zap.SugaredLogger
 }

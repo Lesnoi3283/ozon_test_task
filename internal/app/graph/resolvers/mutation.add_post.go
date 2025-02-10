@@ -16,6 +16,7 @@ import (
 func (r *mutationResolver) AddPost(ctx context.Context, title string, text string, commentsAllowed *bool) (*model.AddPostResponse, error) {
 	user, ok := ctx.Value(middlewares.UserContextKey).(*models.User)
 	if !ok {
+		r.Logger.Debugf("cant get user from ctx")
 		return nil, gqlerror.Errorf("Not authorized")
 	}
 
@@ -28,6 +29,7 @@ func (r *mutationResolver) AddPost(ctx context.Context, title string, text strin
 
 	postID, err := r.PostRepo.AddPost(ctx, newPost)
 	if err != nil {
+		r.Logger.Debugf("cant add post to a database, err: %v", err)
 		if errors.Is(err, repository.NewErrConflict()) {
 			return nil, fmt.Errorf("conflict")
 		}

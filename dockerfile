@@ -22,4 +22,4 @@ COPY .env .env
 
 RUN chmod +x main
 
-CMD ["sh", "-c", "./main -m ${IN_MEMORY_STORAGE}"]
+CMD ["sh", "-c", "./main -m=${IN_MEMORY_STORAGE}"]

@@ -22,6 +22,7 @@ func (r *queryResolver) CommentReplies(ctx context.Context, commentID string, li
 
 	commentIDInt, err := strconv.Atoi(commentID)
 	if err != nil {
+		r.Logger.Debugf("cant convert commentID to int: %v", err)
 		return nil, fmt.Errorf("commentID is not int")
 	}
 
@@ -29,6 +30,7 @@ func (r *queryResolver) CommentReplies(ctx context.Context, commentID string, li
 	if after != nil {
 		afterInt, err = strconv.Atoi(*after)
 		if err != nil {
+			r.Logger.Debugf("cant convert after to int: %v", err)
 			return nil, fmt.Errorf("after is not int")
 		}
 	}
@@ -36,6 +38,7 @@ func (r *queryResolver) CommentReplies(ctx context.Context, commentID string, li
 	//get replies
 	replays, hasNextPage, err := r.CommentRepo.GetReplaysByCommentID(ctx, commentIDInt, limitInt, afterInt)
 	if err != nil {
+		r.Logger.Debugf("failed to get replays from db: %v", err)
 		return nil, fmt.Errorf("interal server error")
 	}
 

@@ -50,7 +50,8 @@ func main() {
 	sugar := logger.Sugar()
 
 	resolver := &resolvers.Resolver{
-		Cfg: *conf,
+		Cfg:    *conf,
+		Logger: sugar,
 	}
 
 	//db set
@@ -81,6 +82,10 @@ func main() {
 			sugar.Fatalf("Failed to connect to postgres: %v", err)
 		}
 		postgresStorage := database.NewRepoPG(postgres)
+		err = postgresStorage.InitDB()
+		if err != nil {
+			sugar.Fatalf("Failed to initialize postgres storage: %v", err)
+		}
 		resolver.PostRepo = postgresStorage
 		resolver.UserRepo = postgresStorage
 		resolver.CommentRepo = postgresStorage
@@ -90,7 +95,7 @@ func main() {
 	resolver.JWTManager = &authUtils.JWTHelper{}
 
 	//middlewares set
-	authMW := middlewares.GetAuthMiddleware(&authUtils.JWTHelper{}, resolver.UserRepo)
+	authMW := middlewares.GetAuthMiddleware(&authUtils.JWTHelper{}, resolver.UserRepo, sugar)
 
 	//build GraphQL server
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))

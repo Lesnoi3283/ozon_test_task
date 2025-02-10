@@ -15,12 +15,16 @@ func (r *queryResolver) Posts(ctx context.Context, limit *int32, after *string) 
 		limitInt = r.Cfg.DefaultPostsLimit
 	} else {
 		limitInt = int(*limit)
+		if limitInt > r.Cfg.MaxPostsLimit {
+			limitInt = r.Cfg.MaxPostsLimit
+		}
 	}
 	afterInt := 0
 	if after != nil {
 		var err error
 		afterInt, err = strconv.Atoi(*after)
 		if err != nil {
+			r.Logger.Debugf("cant convert after to int, err: %v", err)
 			return nil, fmt.Errorf("after is not a number")
 		}
 	}
@@ -28,6 +32,7 @@ func (r *queryResolver) Posts(ctx context.Context, limit *int32, after *string) 
 	//get posts
 	posts, hasNextPage, err := r.PostRepo.GetPosts(ctx, limitInt, afterInt)
 	if err != nil {
+		r.Logger.Debugf("cant get posts from db, err: %v", err)
 		return nil, fmt.Errorf("cant get posts")
 	}
 

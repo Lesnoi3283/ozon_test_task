@@ -15,15 +15,18 @@ import (
 func (r *mutationResolver) AddReplay(ctx context.Context, parentCommentID string, text string) (*model.AddReplayResponse, error) {
 	user, ok := ctx.Value(middlewares.UserContextKey).(*models.User)
 	if !ok {
+		r.Logger.Debugf("cant get user from ctx")
 		return nil, gqlerror.Errorf("Not authorized")
 	}
 
 	parentIDInt, err := strconv.Atoi(parentCommentID)
 	if err != nil {
+		r.Logger.Debugf("parentCommentID is not an int, parsing err: %v", err)
 		return nil, fmt.Errorf("parentCommentID is not int")
 	}
 
 	if len(text) > r.Cfg.MaxCommentTextLength {
+		r.Logger.Debugf("max comment length exceeded, current len is \"%v\", max len is \"%v\"", len(text), r.Cfg.MaxCommentTextLength)
 		return nil, fmt.Errorf("replay text too long, max lenght: %d", r.Cfg.MaxCommentTextLength)
 	}
 
@@ -37,7 +40,8 @@ func (r *mutationResolver) AddReplay(ctx context.Context, parentCommentID string
 
 	id, err := r.CommentRepo.AddComment(ctx, comment)
 	if err != nil {
-		return nil, fmt.Errorf("Internal server error")
+		r.Logger.Debugf("cant add comment to a db, err: %v", err)
+		return nil, fmt.Errorf("internal server error")
 	}
 
 	return &model.AddReplayResponse{

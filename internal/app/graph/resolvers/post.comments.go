@@ -13,6 +13,7 @@ func (p *postResolver) Comments(ctx context.Context, obj *model.Post, limit *int
 	//data prepare
 	id, err := strconv.Atoi(obj.ID)
 	if err != nil {
+		p.Logger.Debugf("cant convert postID to int, err: %v", err)
 		return nil, fmt.Errorf("postID is not an int")
 	}
 	limitInt := 0
@@ -30,6 +31,7 @@ func (p *postResolver) Comments(ctx context.Context, obj *model.Post, limit *int
 	} else {
 		afterInt, err = strconv.Atoi(*after)
 		if err != nil {
+			p.Logger.Debugf("cant convert after to int, err: %v", err)
 			return nil, fmt.Errorf("after is not convertable to int")
 		}
 	}
@@ -37,6 +39,7 @@ func (p *postResolver) Comments(ctx context.Context, obj *model.Post, limit *int
 	//get data
 	comments, hasNextPage, err := p.CommentRepo.GetCommentsByPostID(ctx, id, limitInt, afterInt)
 	if err != nil {
+		p.Logger.Debugf("cant get comments from db, err: %v", err)
 		return nil, fmt.Errorf("failed to get comments by post id: %w", err)
 	}
 

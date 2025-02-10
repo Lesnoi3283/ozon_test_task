@@ -20,7 +20,7 @@ func NewRepoPG(db *sql.DB) *RepoPG {
 }
 
 // InitDB creates the necessary tables in the PostgreSQL database if they do not already exist.
-func InitDB(db *sql.DB) error {
+func (r *RepoPG) InitDB() error {
 	ctx := context.Background()
 
 	usersTableQuery := `
@@ -28,9 +28,9 @@ func InitDB(db *sql.DB) error {
 		id SERIAL PRIMARY KEY,
 		login VARCHAR(255) NOT NULL UNIQUE,
 		password_hash VARCHAR(255) NOT NULL,
-	    password_salt VARCHAR(255) NOT NULL,
+	    password_salt VARCHAR(255) NOT NULL
 	);`
-	if _, err := db.ExecContext(ctx, usersTableQuery); err != nil {
+	if _, err := r.DB.ExecContext(ctx, usersTableQuery); err != nil {
 		return fmt.Errorf("failed to create users table: %w", err)
 	}
 
@@ -43,7 +43,7 @@ func InitDB(db *sql.DB) error {
 		commentsallowed BOOLEAN NOT NULL DEFAULT TRUE,
 		FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
-	if _, err := db.ExecContext(ctx, postsTableQuery); err != nil {
+	if _, err := r.DB.ExecContext(ctx, postsTableQuery); err != nil {
 		return fmt.Errorf("failed to create posts table: %w", err)
 	}
 
@@ -51,14 +51,13 @@ func InitDB(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS comments (
 		id SERIAL PRIMARY KEY,
 		owner_id INTEGER NOT NULL,
-		post_id INTEGER NOT NULL,
+		post_id INTEGER,
 		parent_id INTEGER NOT NULL DEFAULT 0,
 		text TEXT NOT NULL,
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-		FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+		FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
 	);`
-	if _, err := db.ExecContext(ctx, commentsTableQuery); err != nil {
+	if _, err := r.DB.ExecContext(ctx, commentsTableQuery); err != nil {
 		return fmt.Errorf("failed to create comments table: %w", err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap/zaptest"
 	"ozon_test_task/cfg"
 	"ozon_test_task/internal/app/graph/model"
 	"ozon_test_task/internal/app/graph/repository"
@@ -16,9 +17,6 @@ import (
 
 func Test_commentResolver_Replies(t *testing.T) {
 
-	//type fields struct {
-	//	Resolver *Resolver
-	//}
 	type args struct {
 		ctx   context.Context
 		obj   *model.Comment
@@ -352,9 +350,12 @@ func Test_commentResolver_Replies(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			logger := zaptest.NewLogger(t)
+			sugar := logger.Sugar()
 			c := gomock.NewController(t)
 			r := &commentResolver{
 				Resolver: &Resolver{
+					Logger:      sugar,
 					Cfg:         tt.resolverFields.cfg,
 					CommentRepo: tt.resolverFields.getCommentRepo(c),
 				},

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.uber.org/mock/gomock"
+	"go.uber.org/zap/zaptest"
 	"ozon_test_task/internal/app/graph/model"
 	"ozon_test_task/internal/app/graph/repository"
 	"ozon_test_task/internal/app/graph/repository/mocks"
@@ -167,9 +168,12 @@ func Test_mutationResolver_Auth(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			logger := zaptest.NewLogger(t)
+			sugar := logger.Sugar()
 			c := gomock.NewController(t)
 			r := &mutationResolver{
 				Resolver: &Resolver{
+					Logger:     sugar,
 					UserRepo:   tt.resolverFields.getUserRepo(c),
 					JWTManager: tt.resolverFields.getJWTManager(c),
 				},
